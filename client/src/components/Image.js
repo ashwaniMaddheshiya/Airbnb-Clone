@@ -1,0 +1,9 @@
+const Image = ({ src, ...rest }) => {
+  src =
+    src && src.includes("https://")
+      ? src
+      : "http://localhost:5000" + src;
+  return <img {...rest} src={src} alt={""} />;
+};
+
+export default Image;

@@ -1,0 +1,3 @@
+MONGO_URI=<Your MongoDB URL>
+PORT=<Port>
+SECRET=<Secret Key for your JWT Auth (In string)> 
