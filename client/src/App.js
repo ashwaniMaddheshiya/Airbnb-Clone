@@ -12,8 +12,9 @@ import PlacePage from "./pages/PlacePage";
 import BookingsPage from "./pages/BookingsPage";
 import BookingPage from "./pages/BookingPage";
 
-axios.defaults.baseURL = "http://localhost:5000";
-// axios.defaults.baseURL = "https://airbnb-clone-react-server.onrender.com";
+
+
+axios.defaults.baseURL = process.env.REACT_APP_BASEURL;
 axios.defaults.withCredentials = true;
 
 function App() {

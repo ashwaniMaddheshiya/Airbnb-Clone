@@ -2,7 +2,7 @@ const Image = ({ src, ...rest }) => {
   src =
     src && src.includes("https://")
       ? src
-      : "http://localhost:5000" + src;
+      : process.env.REACT_APP_BASEURL + "/" + src;
   return <img {...rest} src={src} alt={""} />;
 };
 
