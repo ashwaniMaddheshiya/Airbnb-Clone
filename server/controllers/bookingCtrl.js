@@ -1,17 +1,21 @@
 const Booking = require("../models/Booking");
 const jwt = require("jsonwebtoken");
+const httpError = require("../models/http-Error");
 
 const jwtSecret = process.env.SECRET;
 
-const newBooking = async (req, res,next) => {
-  const { token } = req.cookies;
+const newBooking = async (req, res, next) => {
   try {
-    const userData = await new Promise((resolve, reject) => {
-      jwt.verify(token, jwtSecret, {}, (err, userData) => {
-        if (err) reject(err);
-        resolve(userData);
-      });
-    });
+    const token = req.headers.authorization; // Get the token from headers
+
+    if (!token) {
+      const error = new httpError("No token, authorization denied", 401);
+      return next(error);
+    }
+
+    // Use async/await to verify the token and get userData
+    const userData = await jwt.verify(token, jwtSecret);
+
     const { place, checkIn, checkOut, numberOfGuests, name, phone, price } =
       req.body;
 
@@ -23,7 +27,7 @@ const newBooking = async (req, res,next) => {
       name,
       phone,
       price,
-      user: userData.id,
+      user: userData.userId,
     });
 
     res.json(doc);
@@ -33,19 +37,44 @@ const newBooking = async (req, res,next) => {
   }
 };
 
-const getBooking = async (req, res,next) => {
-  const { token } = req.cookies;
+const getBooking = async (req, res, next) => {
   try {
-    const userData = await new Promise((resolve, reject) => {
-      jwt.verify(token, jwtSecret, {}, (err, userData) => {
-        if (err) reject(err);
-        resolve(userData);
-      });
-    });
-    const bookings = await Booking.find({ user: userData.id }).populate(
+    const token = req.headers.authorization; // Get the token from headers
+
+    if (!token) {
+      const error = new httpError("No token, authorization denied", 401);
+      return next(error);
+    }
+
+    // Use async/await to verify the token and get userData
+    const userData = await jwt.verify(token, jwtSecret);
+
+    // Use userData.id to query the database
+    const bookings = await Booking.find({ user: userData.userId }).populate(
       "place"
     );
+
     res.json(bookings);
+  } catch (err) {
+    const error = new httpError(err.message, 500);
+    return next(error);
+  }
+};
+
+const getBookingDetail = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const token = req.headers.authorization;
+
+    if (!token) {
+      const error = new httpError("No token, authorization denied", 401);
+      return next(error);
+    }
+
+    const userData = await jwt.verify(token, jwtSecret);
+
+    const bookingDetail = await Booking.findById(id).populate("place");
+    res.json(bookingDetail);
   } catch (err) {
     const error = new httpError(err.message, 500);
     return next(error);
@@ -55,4 +84,5 @@ const getBooking = async (req, res,next) => {
 module.exports = {
   newBooking,
   getBooking,
+  getBookingDetail,
 };

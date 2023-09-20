@@ -1,18 +1,34 @@
 import { Link } from "react-router-dom";
 import AccountNav from "../components/AccountNav";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import PlaceImg from "../components/PlaceImg";
+import { UserContext } from "../context/UserContext";
+import Spinner from "../components/Spinner";
 
 const PlacesPage = () => {
   const [places, setPlaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const auth = useContext(UserContext);
 
   useEffect(() => {
-    axios.get("/api/places/user-places").then(({ data }) => {
-      setPlaces(data);
-    });
-  }, []);
-  
+    const fetchPlaces = async () => {
+      try {
+        const response = await axios.get("/api/places/user-places", {
+          headers: {
+            Authorization: auth.token,
+          },
+        });
+        setPlaces(response.data);
+        setIsLoading(false);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchPlaces();
+  }, [auth.token]);
+
   return (
     <div>
       <AccountNav />
@@ -37,7 +53,10 @@ const PlacesPage = () => {
         </Link>
       </div>
       <div className="mt-4">
-        {places.length > 0 &&
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          places.length > 0 &&
           places.map((place) => (
             <Link
               to={"/account/places/" + place._id}
@@ -51,7 +70,8 @@ const PlacesPage = () => {
                 <p className="text-sm mt-2">{place.description}</p>
               </div>
             </Link>
-          ))}
+          ))
+        )}
       </div>
     </div>
   );

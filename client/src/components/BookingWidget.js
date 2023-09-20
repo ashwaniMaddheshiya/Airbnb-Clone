@@ -11,13 +11,13 @@ const BookingWidget = ({ place }) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [redirect, setRedirect] = useState("");
-  const { user } = useContext(UserContext);
+  const auth = useContext(UserContext);
 
   useEffect(() => {
-    if (user) {
-      setName(user.name);
+    if (auth.name) {
+      setName(auth.name);
     }
-  }, [user]);
+  }, [auth.name]);
 
   let numberOfNights = 0;
   if (checkIn && checkOut) {
@@ -28,19 +28,27 @@ const BookingWidget = ({ place }) => {
   }
 
   const bookThisPlace = async () => {
-    if (!user) {
+    if (!name) {
       alert("You must be logged in for booking!");
       return;
     }
-    const response = await axios.post("/api/bookings", {
-      checkIn,
-      checkOut,
-      numberOfGuests,
-      name,
-      phone,
-      place: place._id,
-      price: numberOfNights * place.price,
-    });
+    const response = await axios.post(
+      "/api/bookings",
+      {
+        checkIn,
+        checkOut,
+        numberOfGuests,
+        name,
+        phone,
+        place: place._id,
+        price: numberOfNights * place.price,
+      },
+      {
+        headers: {
+          Authorization: auth.token,
+        },
+      }
+    );
     const bookingId = response.data._id;
     setRedirect(`/account/bookings/${bookingId}`);
   };
@@ -52,7 +60,7 @@ const BookingWidget = ({ place }) => {
   return (
     <div className="bg-white shadow p-4 rounded-2xl">
       <div className="text-2xl text-center">
-        Price: ${place.price} / per night
+        Price: ₹{place.price} / per night
       </div>
       <div className="border rounded-2xl mt-4">
         <div className="flex">

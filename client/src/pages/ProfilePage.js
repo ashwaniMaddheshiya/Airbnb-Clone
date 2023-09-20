@@ -1,45 +1,51 @@
-import { useContext } from "react";
-import { UserContext } from "../context/UserContext";
-import { Navigate, useParams } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+// import { Navigate } from "react-router-dom";
 import axios from "axios";
-import PlacesPage from "./PlacesPage";
 import AccountNav from "../components/AccountNav";
+import { UserContext } from "../context/UserContext";
+import Spinner from "../components/Spinner";
 
 const ProfilePage = () => {
-  const { ready, user, setUser } = useContext(UserContext);
-  console.log(user);
+  const auth = useContext(UserContext);
+  const [user, setUser] = useState(null);
 
-  let { subpage } = useParams();
-  if (subpage === undefined) {
-    subpage = "profile";
-  }
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get("/api/users/profile", {
+          headers: {
+            Authorization: auth.token,
+          },
+        });
 
-  const logout = async () => {
-    await axios.post("/api/users/logout");
-    <Navigate to={"/"} />;
-    setUser(null);
-  };
+        setUser(response.data.user);
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
-  if (!ready) {
-    return "Loading...";
-  }
-
-  if (ready && !user) {
-    return <Navigate to={"/login"} />;
-  }
+    if (auth.isLoggedIn) {
+      fetchProfile();
+    }
+  }, [auth.isLoggedIn, auth.token]);
 
   return (
     <div>
       <AccountNav />
-      {subpage === "profile" && (
+      {user ? (
         <div className="text-center max-w-lg mx-auto">
           Logged in as {user.name} ({user.email})<br />
-          <button onClick={logout} className="primary max-w-sm mt-2">
+          <button onClick={auth.logout} className="primary max-w-sm mt-2">
             Logout
           </button>
         </div>
+      ) : (
+        <div className="text-center max-w-lg mx-auto">
+          {" "}
+          <Spinner/>
+          Loading User Profile...
+        </div>
       )}
-      {subpage === "places" && <PlacesPage />}
     </div>
   );
 };

@@ -14,7 +14,7 @@ const {
 router.post("/", fileUpload.array("image", 10), newPlace);
 router.get("/", getPlaces);
 router.get("/user-places", getUserPlace);
-router.get("/:id", placeDetails);
-router.put("/:id", fileUpload.array("image", 10), updatePlace);
+router.get("/:userId", placeDetails);
+router.put("/:userId", fileUpload.array("image", 10), updatePlace);
 
 module.exports = router;

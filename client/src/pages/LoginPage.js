@@ -7,21 +7,30 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [redirect, setRedirect] = useState(false);
-  const { setUser } = useContext(UserContext);
+  const auth = useContext(UserContext);
 
   const handleLoginSubmit = async (ev) => {
     ev.preventDefault();
+    if (email.trim() === "" || password.trim() === "") {
+      alert("Please fill all the details!");
+      return;
+    }
     try {
-      const { data } = await axios.post("/api/users/login", {
-        email,
-        password,
-      });
-      setUser(data);
-      console.log("data",data);
+      const { data } = await axios.post(
+        "/api/users/login",
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      auth.login(data.userId, data.token, data.name);
       alert("Login successful");
       setRedirect(true);
     } catch (e) {
-      alert("Login failed");
+      alert("Login failed, Please try again later!");
     }
   };
 

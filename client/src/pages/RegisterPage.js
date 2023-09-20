@@ -9,16 +9,28 @@ const RegisterPage = () => {
 
   const registerUser = async (ev) => {
     ev.preventDefault();
+    if (name.trim() === "" || email.trim() === "" || password.trim() === "") {
+      alert("Please fill all the details!");
+      return;
+    }
     try {
-      await axios.post("/api/users/register", {
-        name,
-        email,
-        password,
-      });
+      await axios.post(
+        "/api/users/register",
+        {
+          name,
+          email,
+          password,
+        },
+        { withCredentials: true }
+      );
+
       alert("Registration successful. Now you can log in");
-    } catch (e) {
-      console.log(e);
-      alert("Registration failed. Please try again later");
+      setName("");
+      setEmail("");
+      setPassword("");
+    } catch (err) {
+      console.log(err);
+      alert("Registration failed. Check your credentials and try again");
     }
   };
 

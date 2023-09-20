@@ -7,8 +7,7 @@ const jwtSecret = process.env.SECRET;
 
 const newPlace = async (req, res, next) => {
   try {
-    const { token } = req.cookies;
-    console.log(req.files);
+    const token = req.headers.authorization;
     const {
       title,
       address,
@@ -21,19 +20,12 @@ const newPlace = async (req, res, next) => {
       maxGuests,
     } = req.body;
 
-    const userData = await new Promise((resolve, reject) => {
-      jwt.verify(token, jwtSecret, {}, (err, userData) => {
-        if (err) reject(err);
-        resolve(userData);
-      });
-    });
-    // console.log("userData", userData);
+    const userData = await jwt.verify(token, jwtSecret, {});
 
     const imagePaths = req.files.map((file) => file.path);
-    // console.log(imagePaths)
 
     const placeDoc = await Place.create({
-      owner: userData.id,
+      owner: userData.userId,
       price,
       title,
       address,
@@ -50,7 +42,6 @@ const newPlace = async (req, res, next) => {
   } catch (err) {
     const error = new httpError(err.message, 500);
     return next(error);
-    // throw err;
   }
 };
 
@@ -64,9 +55,9 @@ const getPlaces = async (req, res, next) => {
 };
 
 const placeDetails = async (req, res, next) => {
-  const { id } = req.params;
+  const { userId } = req.params;
   try {
-    const place = await Place.findById(id);
+    const place = await Place.findById(userId);
     res.json(place);
   } catch (err) {
     const error = new httpError(err.message, 500);
@@ -76,8 +67,8 @@ const placeDetails = async (req, res, next) => {
 
 const updatePlace = async (req, res, next) => {
   try {
-    const { token } = req.cookies;
-    const { id } = req.params;
+    const token = req.headers.authorization;
+    const { userId } = req.params;
 
     const {
       title,
@@ -91,16 +82,11 @@ const updatePlace = async (req, res, next) => {
       price,
     } = req.body;
 
-    const userData = await new Promise((resolve, reject) => {
-      jwt.verify(token, jwtSecret, {}, (err, userData) => {
-        if (err) reject(err);
-        resolve(userData);
-      });
-    });
+    const userData = await jwt.verify(token, jwtSecret, {});
 
-    const placeDoc = await Place.findById(id);
+    const placeDoc = await Place.findById(userId);
 
-    if (userData.id === placeDoc.owner.toString()) {
+    if (userData.userId === placeDoc.owner.toString()) {
       placeDoc.set({
         title,
         address,
@@ -131,17 +117,12 @@ const updatePlace = async (req, res, next) => {
 
 const getUserPlace = async (req, res, next) => {
   try {
-    const { token } = req.cookies;
+    const token = req.headers.authorization;
 
-    const userData = await new Promise((resolve, reject) => {
-      jwt.verify(token, jwtSecret, {}, (err, userData) => {
-        if (err) reject(err);
-        resolve(userData);
-      });
-    });
+    const userData = await jwt.verify(token, jwtSecret, {});
 
-    const { id } = userData;
-    const places = await Place.find({ owner: id });
+    const { userId } = userData;
+    const places = await Place.find({ owner: userId });
 
     res.json(places);
   } catch (err) {

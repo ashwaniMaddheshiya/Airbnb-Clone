@@ -1,26 +1,48 @@
 import AccountNav from "../components/AccountNav";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import PlaceImg from "../components/PlaceImg";
 import { Link } from "react-router-dom";
 import BookingDates from "../components/BookingDates";
+import { UserContext } from "../context/UserContext";
+import Spinner from "../components/Spinner";
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const auth = useContext(UserContext);
+
   useEffect(() => {
-    axios.get("/api/bookings").then((response) => {
-      setBookings(response.data);
-    });
-  }, []);
+    const fetchBookings = async () => {
+      try {
+        const response = await axios.get("/api/bookings", {
+          headers: {
+            Authorization: auth.token,
+          },
+        });
+        setBookings(response.data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [auth.token]);
+
   return (
     <div>
       <AccountNav />
       <div>
-        {bookings?.length > 0 &&
+        {isLoading ? (
+          <Spinner />
+        ) : bookings?.length > 0 ? (
           bookings.map((booking) => (
             <Link
               to={`/account/bookings/${booking._id}`}
-              className="flex gap-4 bg-gray-200 rounded-2xl overflow-hidden"
+              className="flex gap-4 bg-gray-200 rounded-2xl overflow-hidden mt-2"
             >
               <div className="w-48">
                 <PlaceImg place={booking.place} />
@@ -48,13 +70,16 @@ const BookingsPage = () => {
                       />
                     </svg>
                     <span className="text-2xl">
-                      Total price: ${booking.price}
+                      Total price: ₹{booking.price}
                     </span>
                   </div>
                 </div>
               </div>
             </Link>
-          ))}
+          ))
+        ) : (
+          <div className="text-center text-2xl"> No Booking Found</div>
+        )}
       </div>
     </div>
   );

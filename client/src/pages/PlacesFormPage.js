@@ -1,10 +1,12 @@
 import Perks from "../components/Perks";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import AccountNav from "../components/AccountNav";
 import { Navigate, useParams } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 
 const PlacesFormPage = () => {
+  const auth = useContext(UserContext);
   const { id } = useParams();
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
@@ -15,27 +17,33 @@ const PlacesFormPage = () => {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [maxGuests, setMaxGuests] = useState(1);
-  const [price, setPrice] = useState(100);
+  const [price, setPrice] = useState(1000);
   const [redirect, setRedirect] = useState(false);
 
   useEffect(() => {
-    if (!id) {
-      return;
-    }
-    axios.get("/api/places/" + id).then((response) => {
-      const { data } = response;
-      console.log(data);
-      setTitle(data.title);
-      setAddress(data.address);
-      setImage(data.image);
-      setDescription(data.description);
-      setPerks(data.perks);
-      setExtraInfo(data.extraInfo);
-      setCheckIn(data.checkIn);
-      setCheckOut(data.checkOut);
-      setMaxGuests(data.maxGuests);
-      setPrice(data.price);
-    });
+    const fetchData = async () => {
+      if (!id) {
+        return;
+      }
+      try {
+        const response = await axios.get("/api/places/" + id);
+        const { data } = response;
+        setTitle(data.title);
+        setAddress(data.address);
+        setImage(data.image);
+        setDescription(data.description);
+        setPerks(data.perks);
+        setExtraInfo(data.extraInfo);
+        setCheckIn(data.checkIn);
+        setCheckOut(data.checkOut);
+        setMaxGuests(data.maxGuests);
+        setPrice(data.price);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
   const inputHeader = (text) => {
@@ -65,7 +73,6 @@ const PlacesFormPage = () => {
 
   const submitHandler = async (ev) => {
     ev.preventDefault();
-    console.log(title, image, description, address, perks);
 
     const formData = new FormData();
     formData.append("title", title);
@@ -83,12 +90,27 @@ const PlacesFormPage = () => {
 
     if (id) {
       // update
-      await axios.put("/api/places/" + id, formData);
+      try {
+        await axios.put("/api/places/" + id, formData, {
+          headers: {
+            Authorization: auth.token,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+      }
       setRedirect(true);
     } else {
       // new place
-      console.log(formData.title);
-      await axios.post("/api/places", formData);
+      try {
+        await axios.post("/api/places", formData, {
+          headers: {
+            Authorization: auth.token,
+          },
+        });
+      } catch (err) {
+        console.log(err);
+      }
       setRedirect(true);
     }
   };
@@ -144,7 +166,7 @@ const PlacesFormPage = () => {
         />
         {preInput("Perks", "select all the perks of your place")}
         <div className="grid mt-2 gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          <Perks selected={perks} onChange={setPerks} />
+          <Perks selected={perks || []} onChange={setPerks} />
         </div>
         {preInput("Extra info", "house rules, etc")}
         <textarea
