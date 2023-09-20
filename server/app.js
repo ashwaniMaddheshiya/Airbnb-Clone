@@ -20,7 +20,11 @@ app.use('/uploads/images', express.static(path.join('uploads', 'images')));
 app.use(
   cors({
     credentials: true,
+<<<<<<< HEAD
     origin: "http://localhost:3000",
+=======
+    origin: "https://airbnb-clone-react.onrender.com",
+>>>>>>> 19f0754700eb00cddaa5981d96f6d5abe39a09e8
   })
 );
 
